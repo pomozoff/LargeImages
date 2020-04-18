@@ -9,8 +9,10 @@
 import Foundation
 
 enum Change {
-    case insert(at: IndexPath)
-    case delete(at: IndexPath)
-    case reload(at: IndexPath)
-    case move(from: IndexPath, to: IndexPath)
+    case insert(at: Int)
+    case delete(at: Int)
+    case reload(at: Int)
+    case move(from: Int, to: Int)
 }
+
+extension Change: Equatable {}

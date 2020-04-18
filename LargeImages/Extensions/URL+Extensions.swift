@@ -12,4 +12,8 @@ extension URL {
     static var documents: URL {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
     }
+
+    func isDirectory() throws -> Bool {
+        (try resourceValues(forKeys: [.isDirectoryKey])).isDirectory ?? false
+    }
 }

@@ -17,9 +17,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
         guard let windowScene = (scene as? UIWindowScene) else { return }
 
-        let directoryReader = DirectoryReader(directory: URL.documents)
+        let directoryReader = DirectoryReader(url: URL.documents)
+        directoryReader.imageFilter = ImageURLFilter()
+
         let viewModel = CollectionViewModel(directoryReadable: directoryReader)
         let collectionViewController = CollectionViewController()
+
+        viewModel.presenter = collectionViewController
         collectionViewController.configure(with: viewModel)
 
         let window = UIWindow(windowScene: windowScene)

@@ -9,7 +9,9 @@
 import UIKit
 
 struct ImageCellViewModel {
-    var image: UIImage
+    let state: FetchingState
+    let url: URL
+    var image: UIImage?
 }
 
 extension ImageCellViewModel: ViewModel {}

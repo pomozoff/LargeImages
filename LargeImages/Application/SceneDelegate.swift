@@ -20,8 +20,14 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let directoryReader = DirectoryReader(url: URL.documents)
         directoryReader.imageFilter = ImageURLFilter()
 
-        let viewModel = CollectionViewModel(directoryReadable: directoryReader)
-        let collectionViewController = CollectionViewController()
+        let imageResizer = ImageIOResizer()
+        let imageFetchable = ImageFetcher(imageResizable: imageResizer)
+
+        let viewModel = ImageListViewModel(
+            directoryReadable: directoryReader,
+            imageFetchable: imageFetchable
+        )
+        let collectionViewController = ImageListViewController()
 
         viewModel.presenter = collectionViewController
         collectionViewController.configure(with: viewModel)

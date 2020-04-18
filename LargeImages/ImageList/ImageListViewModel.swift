@@ -1,5 +1,5 @@
 //
-//  ImageListViewController.swift
+//  ImageListViewModel.swift
 //  LargeImages
 //
 //  Created by Anton Pomozov on 15.04.2020.
@@ -32,6 +32,7 @@ class ImageListViewModel {
         self.imageFetchable = imageFetchable
     }
 
+    @Atomic
     private var items: [Item] = []
 
     private let directoryReadable: DirectoryReadable
@@ -64,17 +65,19 @@ extension ImageListViewModel {
     func makeImageCellViewModel(for index: Int, with size: CGSize, completion: @escaping (ImageCellViewModel) -> Void) -> CancelToken? {
         let item = items[index]
         if let image = item.image {
-            completion(ImageCellViewModel(state: .idle, image: image))
+            DispatchQueue.main.async {
+                completion(ImageCellViewModel(state: .idle, url: item.url, image: image))
+            }
             return nil
         }
 
-        completion(ImageCellViewModel(state: .fetching, image: nil))
+        NSLog("YYY - index: \(index), file: \(item.url.lastPathComponent)")
         return imageFetchable.fetchImage(
             from: item.url,
             with: size,
-            on: DispatchQueue.global(qos: .userInitiated),
             completion: { [weak self] result in
-                self?.processFetchingImageResult(result, completion: completion)
+                NSLog("YYY - index: \(index), result \(result)")
+                self?.processFetchingImageResult(result, for: item.url, completion: completion)
             }
         )
     }
@@ -89,21 +92,21 @@ private extension ImageListViewModel {
             updateSemaphore.wait()
 
             let diff = urls.difference(from: self.items.map(\.url))
-            let newItems = urls.map { url in
-                Item(
-                    url: url,
-                    image: self.items.first { $0.url == url }?.image
-                )
-            }
-
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
 
                 self.presenter?.updateState(.idle)
                 self.presenter?.didUpdateURLs(
                     with: diff,
-                    updateData: {
-                        self.items = newItems
+                    updateData: { [weak self] in
+                        self?.$items.mutate { items in
+                            items = urls.map { url in
+                                Item(
+                                    url: url,
+                                    image: items.first { $0.url == url }?.image
+                                )
+                            }
+                        }
                     }, completion: { [weak self] in
                         self?.updateSemaphore.signal()
                     }
@@ -117,15 +120,23 @@ private extension ImageListViewModel {
         }
     }
 
-    func processFetchingImageResult(_ result: ImageFetcherResult, completion: @escaping (ImageCellViewModel) -> Void) {
-        DispatchQueue.main.async { [weak presenter] in
+    func processFetchingImageResult(_ result: ImageFetcherResult, for url: URL, completion: @escaping (ImageCellViewModel) -> Void) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+
             switch result {
             case let .success(image):
-                completion(ImageCellViewModel(state: .idle, image: image))
+                self.$items.mutate {
+                    guard let index = $0.firstIndex(where: { $0.url == url }) else {
+                        return
+                    }
+                    $0[index].image = image
+                }
+                completion(ImageCellViewModel(state: .idle, url: url, image: image))
 
             case let .failure(error):
-                completion(ImageCellViewModel(state: .error(error), image: nil))
-                presenter?.updateState(.error(error))
+                completion(ImageCellViewModel(state: .error(error), url: url, image: nil))
+                self.presenter?.updateState(.error(error))
             }
         }
     }

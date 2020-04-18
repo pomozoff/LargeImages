@@ -1,5 +1,5 @@
 //
-//  ImageURLFilter.swift
+//  ImageURLChecker.swift
 //  LargeImages
 //
 //  Created by Anton Pomozov on 17.04.2020.

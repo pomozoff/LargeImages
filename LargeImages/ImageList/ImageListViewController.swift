@@ -1,5 +1,5 @@
 //
-//  CollectionViewController.swift
+//  ImageListViewController.swift
 //  LargeImages
 //
 //  Created by Anton Pomozov on 15.04.2020.
@@ -9,7 +9,7 @@
 import UIKit
 
 class ImageListViewController: UIViewController {
-    private(set) var viewModel: CollectionViewModel?
+    private(set) var viewModel: ImageListViewModel?
 
     // MARK: - Life cycle
 
@@ -20,16 +20,12 @@ class ImageListViewController: UIViewController {
         currentViewModel.fetchImages()
     }
 
-    override func viewWillLayoutSubviews() {
-        super.viewWillLayoutSubviews()
-
-        let width = (collectionView.bounds.width
-            - collectionLayout.minimumInteritemSpacing * CGFloat(numberOfColumns - 1)
-        ) / CGFloat(numberOfColumns)
-
-        collectionLayout.itemSize.width = width
-        collectionLayout.itemSize.height = width
-    }
+//    override func viewWillLayoutSubviews() {
+//        super.viewWillLayoutSubviews()
+//
+//        collectionLayout.itemSize.width = itemWidth
+//        collectionLayout.itemSize.height = itemWidth
+//    }
 
     // MARK: - Private
 
@@ -46,7 +42,7 @@ class ImageListViewController: UIViewController {
 // MARK: - ViewModelOwning
 
 extension ImageListViewController: ViewModelOwning {
-    func configure(with viewModel: CollectionViewModel) {
+    func configure(with viewModel: ImageListViewModel) {
         self.viewModel = viewModel
     }
 }
@@ -60,11 +56,10 @@ extension ImageListViewController: UICollectionViewDataSource {
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell: ImageCell = collectionView.dequeueReusableCell(at: indexPath)
+        cell.indexPath = indexPath
 
         cell.cancelToken = currentViewModel.makeImageCellViewModel(for: indexPath.item, with: collectionLayout.itemSize) { cellViewModel in
-            guard let cell = collectionView.cellForItem(at: indexPath) as? ImageCell else {
-                return
-            }
+            guard cell.indexPath == indexPath else { return }
             cell.configure(with: cellViewModel)
         }
 
@@ -74,7 +69,11 @@ extension ImageListViewController: UICollectionViewDataSource {
 
 // MARK: - UICollectionViewDelegateFlowLayout
 
-extension ImageListViewController: UICollectionViewDelegateFlowLayout {}
+extension ImageListViewController: UICollectionViewDelegateFlowLayout {
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        CGSize(width: itemWidth, height: itemWidth)
+    }
+}
 
 // MARK: - ImagePresenter
 
@@ -105,27 +104,36 @@ extension ImageListViewController: ErrorPresenter {}
 // MARK: - Private
 
 private extension ImageListViewController {
+    var itemWidth: CGFloat {
+        (collectionView.bounds.width
+            - collectionLayout.minimumInteritemSpacing * CGFloat(numberOfColumns - 1)
+        ) / CGFloat(numberOfColumns)
+    }
+
     func setup() {
+        view.backgroundColor = .systemBackground
+
         collectionLayout.itemSize = itemSize
 
         collectionView.translatesAutoresizingMaskIntoConstraints = false
-        collectionView.backgroundColor = .systemGroupedBackground
+        collectionView.backgroundColor = .systemBackground
+        collectionView.showsHorizontalScrollIndicator = false
+        collectionView.alwaysBounceVertical = true
 
         collectionView.register(ImageCell.self, forCellWithReuseIdentifier: ImageCell.reuseIdentifier)
         collectionView.dataSource = self
         collectionView.delegate = self
 
-        activityIndicator.startAnimating()
+        activityIndicator.color = .white
         activityIndicator.style = .large
         activityIndicator.translatesAutoresizingMaskIntoConstraints = false
-
-        activityIndicatorView.addSubview(activityIndicator)
 
         activityIndicatorView.alpha = 0.0
         activityIndicatorView.translatesAutoresizingMaskIntoConstraints = false
         activityIndicatorView.isUserInteractionEnabled = false
         activityIndicatorView.backgroundColor = UIColor(white: 0.3, alpha: 0.5)
 
+        activityIndicatorView.addSubview(activityIndicator)
         view.addSubview(collectionView)
         view.addSubview(activityIndicatorView)
 
@@ -133,10 +141,10 @@ private extension ImageListViewController {
             activityIndicator.centerXAnchor.constraint(equalTo: activityIndicatorView.centerXAnchor),
             activityIndicator.centerYAnchor.constraint(equalTo: activityIndicatorView.centerYAnchor),
 
-            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            collectionView.topAnchor.constraint(equalTo: view.topAnchor),
-            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            collectionView.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
+            collectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            collectionView.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
+            collectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
 
             activityIndicatorView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             activityIndicatorView.topAnchor.constraint(equalTo: view.topAnchor),

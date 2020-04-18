@@ -1,5 +1,5 @@
 //
-//  DirectoryReader.swift
+//  DirectoryReadable.swift
 //  LargeImages
 //
 //  Created by Anton Pomozov on 16.04.2020.

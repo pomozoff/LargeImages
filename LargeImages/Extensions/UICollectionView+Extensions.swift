@@ -27,7 +27,6 @@ extension UICollectionView {
         }
 
         updateData()
-
         performBatchUpdates(
             {
                 deleteItems(at: deletedIndexPaths)

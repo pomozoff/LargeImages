@@ -20,8 +20,9 @@ protocol ImageFetchable: AnyObject {
 }
 
 class ImageFetcher {
-    init(imageResizable: ImageResizable) {
+    init(imageResizable: ImageResizable, maxTasksNumber: Int) {
         self.imageResizable = imageResizable
+        workersSemaphore = DispatchSemaphore(value: maxTasksNumber)
     }
 
     private let imageResizable: ImageResizable
@@ -37,8 +38,10 @@ class ImageFetcher {
         attributes: .concurrent
     )
 
+    private let workersSemaphore: DispatchSemaphore
+
     @Atomic
-    private var workers: [URL: DispatchWorkItem] = [:]
+    private var workers: [UUID: DispatchWorkItem] = [:]
 }
 
 extension ImageFetcher: ImageFetchable {
@@ -48,51 +51,50 @@ extension ImageFetcher: ImageFetchable {
         completion: @escaping (ImageFetcherResult) -> Void
     ) -> CancelToken? {
         let worker = DispatchWorkItem { [weak self] in
-            NSLog("XXX - Perform worker for file: \(url.lastPathComponent)")
+            defer {
+                self?.workersSemaphore.signal()
+            }
+
             guard let self = self else { return }
 
+            NSLog("XXX - Execute worker for file: \(url.lastPathComponent)")
             let result = self.imageResizable.resizedImage(at: url, for: size)
             completion(result.map { UIImage(cgImage: $0) })
             NSLog("XXX - Completed worker for file: \(url.lastPathComponent)")
-
-            self.removeWorker(for: url)
         }
 
-        addWorker(worker, for: url)
+        let uuid = addWorker(worker)
+        NSLog("XXX - Added worker: \(uuid) for file: \(url.lastPathComponent)")
 
         return { [weak self, weak worker] in
-            NSLog("XXX - Cancel token - for file: \(url.lastPathComponent)")
+            NSLog("XXX - Cancel token - worker: \(uuid) for file: \(url.lastPathComponent)")
 
             if let worker = worker, !worker.isCancelled {
-                NSLog("XXX - Cancel worker: \(worker) for file: \(url.lastPathComponent)")
+                NSLog("XXX - Cancel worker: \(uuid) for file: \(url.lastPathComponent)")
                 worker.cancel()
             }
 
-            self?.removeWorker(for: url)
+            self?.removeWorker(for: uuid)
         }
     }
 }
 
 private extension ImageFetcher {
-    func addWorker(_ worker: DispatchWorkItem, for url: URL) {
+    func addWorker(_ worker: DispatchWorkItem) -> UUID {
+        let uuid = UUID()
+
         $workers.mutate {
-            if let currentWorker = $0[url], !currentWorker.isCancelled { return }
-
-            NSLog("XXX - Add worker: \(worker) for file: \(url.lastPathComponent)")
-
-            $0[url] = worker
-            guard !$0.map({ !$0.value.isExecuting }).isEmpty else { return }
-
+            $0[uuid] = worker
+            guard $0.map(\.value.isExecuting).filter({ $0 }).isEmpty else { return }
             executeWorkers()
         }
+
+        return uuid
     }
 
-    func removeWorker(for url: URL) {
+    func removeWorker(for uuid: UUID) {
         $workers.mutate {
-            guard let worker = $0[url] else { return }
-
-            $0.removeValue(forKey: url)
-            NSLog("XXX - Removed worker: \(worker) for file: \(url.lastPathComponent)")
+            $0.removeValue(forKey: uuid)
         }
     }
 
@@ -101,18 +103,27 @@ private extension ImageFetcher {
             while true {
                 guard let self = self else { break }
 
-                var firstWorkerPair: (key: URL, value: DispatchWorkItem)?
+                self.workersSemaphore.wait()
+
+                var firstWorkerPair: (key: UUID, value: DispatchWorkItem)?
                 self.$workers.mutate {
                     firstWorkerPair = $0.first {
                         !$0.value.isExecuting
                     }
                 }
 
-                guard let workerPair = firstWorkerPair else { break }
+                guard let workerPair = firstWorkerPair else {
+                    self.workersSemaphore.signal()
+                    break
+                }
 
                 if !workerPair.value.isCancelled, !workerPair.value.isExecuting {
                     workerPair.value.isExecuting = true
+
                     self.workerQueue.async(execute: workerPair.value)
+                    self.removeWorker(for: workerPair.key)
+                } else {
+                    self.workersSemaphore.signal()
                 }
             }
         }

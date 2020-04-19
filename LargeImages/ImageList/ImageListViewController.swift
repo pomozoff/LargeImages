@@ -56,10 +56,19 @@ extension ImageListViewController: UICollectionViewDataSource {
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell: ImageCell = collectionView.dequeueReusableCell(at: indexPath)
-        cell.indexPath = indexPath
+        cell.setup(for: indexPath)
 
-        cell.cancelToken = currentViewModel.makeImageCellViewModel(for: indexPath.item, with: collectionLayout.itemSize) { cellViewModel in
-            guard cell.indexPath == indexPath else { return }
+        cell.cancelToken = currentViewModel.makeImageCellViewModel(
+            for: indexPath.item,
+            with: collectionLayout.itemSize
+        ) { cellViewModel in
+            guard cell.indexPath == indexPath else {
+                if let oldCell = collectionView.cellForItem(at: indexPath) as? ImageCell {
+                    return oldCell.configure(with: cellViewModel)
+                }
+                return
+            }
+
             cell.configure(with: cellViewModel)
         }
 

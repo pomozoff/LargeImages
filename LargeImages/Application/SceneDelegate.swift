@@ -21,7 +21,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         directoryReader.imageFilter = ImageURLFilter()
 
         let imageResizer = ImageIOResizer()
-        let imageFetchable = ImageFetcher(imageResizable: imageResizer)
+        let imageFetchable = ImageFetcher(imageResizable: imageResizer, maxTasksNumber: 4)
 
         let viewModel = ImageListViewModel(
             directoryReadable: directoryReader,

@@ -10,8 +10,8 @@ import UIKit
 
 class ImageCell: UICollectionViewCell {
     private(set) var viewModel: ImageCellViewModel?
+    private(set) var indexPath: IndexPath = [-1, -1]
 
-    var indexPath: IndexPath = [-1, -1]
     var cancelToken: CancelToken?
 
     override init(frame: CGRect) {
@@ -26,13 +26,16 @@ class ImageCell: UICollectionViewCell {
 
     override func prepareForReuse() {
         imageView.image = placeholderImage
+    }
+
+    func setup(for indexPath: IndexPath) {
         updateState(.fetching)
 
         cancelToken?()
         cancelToken = nil
         viewModel = nil
 
-        indexPath = [-1, -1]
+        self.indexPath = indexPath
     }
 
     private let imageView = UIImageView()
@@ -50,7 +53,9 @@ extension ImageCell: ViewModelOwning {
         updateState(viewModel.state)
 
         guard let image = viewModel.image else { return }
+
         imageView.image = image
+        cancelToken = nil
     }
 }
 

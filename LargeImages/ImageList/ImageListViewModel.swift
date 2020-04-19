@@ -8,6 +8,7 @@
 
 import UIKit
 
+// TODO: <T>
 enum FetchingState {
     case idle
     case fetching
@@ -62,14 +63,32 @@ extension ImageListViewModel {
         }
     }
 
-    func makeImageCellViewModel(for index: Int, with size: CGSize, completion: @escaping (ImageCellViewModel) -> Void) -> CancelToken? {
+    func sizeOfImage(for index: Int, with width: CGFloat) -> CGSize {
+        items[index].size.aspectSize(for: width)
+    }
+
+    func makeImageCellViewModel(for index: Int, with width: CGFloat, completion: @escaping (ImageCellViewModel) -> Void) -> CancelToken? {
         let item = items[index]
+
         if let image = item.image {
             DispatchQueue.main.async {
-                completion(ImageCellViewModel(state: .idle, url: item.url, image: image))
+                completion(ImageCellViewModel(
+                    state: .idle,
+                    url: item.url,
+                    size: image.size,
+                    image: image)
+                )
             }
             return nil
         }
+
+        let size = item.size.aspectSize(for: width)
+        completion(ImageCellViewModel(
+            state: .fetching,
+            url: item.url,
+            size: size,
+            image: nil)
+        )
 
         NSLog("YYY - index: \(index), file: \(item.url.lastPathComponent)")
         return imageFetchable.fetchImage(
@@ -92,6 +111,8 @@ private extension ImageListViewModel {
             updateSemaphore.wait()
 
             let diff = urls.difference(from: self.items.map(\.url))
+            let sizes = urls.map { $0.sizeOfImage }
+
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
 
@@ -100,9 +121,10 @@ private extension ImageListViewModel {
                     with: diff,
                     updateData: { [weak self] in
                         self?.$items.mutate { items in
-                            items = urls.map { url in
+                            items = urls.enumerated().map { (index, url) in
                                 Item(
                                     url: url,
+                                    size: sizes[index],
                                     image: items.first { $0.url == url }?.image
                                 )
                             }
@@ -132,10 +154,20 @@ private extension ImageListViewModel {
                     }
                     $0[index].image = image
                 }
-                completion(ImageCellViewModel(state: .idle, url: url, image: image))
+                completion(ImageCellViewModel(
+                    state: .idle,
+                    url: url,
+                    size: image.size,
+                    image: image)
+                )
 
             case let .failure(error):
-                completion(ImageCellViewModel(state: .error(error), url: url, image: nil))
+                completion(ImageCellViewModel(
+                    state: .error(error),
+                    url: url,
+                    size: .zero,
+                    image: nil)
+                )
                 self.presenter?.updateState(.error(error))
             }
         }
@@ -144,6 +176,7 @@ private extension ImageListViewModel {
 
 private struct Item {
     let url: URL
+    let size: CGSize
     var image: UIImage?
 }
 

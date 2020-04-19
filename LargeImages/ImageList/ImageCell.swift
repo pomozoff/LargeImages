@@ -61,11 +61,12 @@ extension ImageCell: ViewModelOwning {
 
 private extension ImageCell {
     func setup() {
-        imageView.contentMode = .scaleAspectFit
+        imageView.contentMode = .center
         imageView.translatesAutoresizingMaskIntoConstraints = false
 
         contentView.backgroundColor = .systemBackground
-        contentView.clipsToBounds = true
+        contentView.layer.cornerRadius = 4.0
+        contentView.layer.masksToBounds = true
 
         activityIndicator.color = .white
         activityIndicator.style = .large

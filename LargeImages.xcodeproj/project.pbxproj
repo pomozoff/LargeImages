@@ -14,6 +14,7 @@
 		E845D3E3244B3692008E88F4 /* CGSize+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E845D3E2244B3692008E88F4 /* CGSize+Extensions.swift */; };
 		E845D3E5244B37A4008E88F4 /* ImageIOResizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E845D3E4244B37A4008E88F4 /* ImageIOResizer.swift */; };
 		E8A2D77C244B195F004BDA3D /* ImageFetchable.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8A2D77B244B195F004BDA3D /* ImageFetchable.swift */; };
+		E8B2545D244C622600C7E45F /* PinterestLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8B2545C244C622600C7E45F /* PinterestLayout.swift */; };
 		E8C3AB2F244A396C00E20C66 /* ErrorPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C3AB2E244A396C00E20C66 /* ErrorPresenter.swift */; };
 		E8C403242447A4B800AE1EAE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C403232447A4B800AE1EAE /* AppDelegate.swift */; };
 		E8C403262447A4B800AE1EAE /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C403252447A4B800AE1EAE /* SceneDelegate.swift */; };
@@ -45,6 +46,7 @@
 		E845D3E2244B3692008E88F4 /* CGSize+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CGSize+Extensions.swift"; sourceTree = "<group>"; };
 		E845D3E4244B37A4008E88F4 /* ImageIOResizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageIOResizer.swift; sourceTree = "<group>"; };
 		E8A2D77B244B195F004BDA3D /* ImageFetchable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageFetchable.swift; sourceTree = "<group>"; };
+		E8B2545C244C622600C7E45F /* PinterestLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinterestLayout.swift; sourceTree = "<group>"; };
 		E8C3AB2E244A396C00E20C66 /* ErrorPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorPresenter.swift; sourceTree = "<group>"; };
 		E8C403202447A4B800AE1EAE /* LargeImages.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LargeImages.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E8C403232447A4B800AE1EAE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -149,6 +151,7 @@
 				E8C403372447A8B100AE1EAE /* ImageListViewModel.swift */,
 				E8C4033924482A2500AE1EAE /* ImageCell.swift */,
 				E8C4033F24483D6F00AE1EAE /* ImageCellViewModel.swift */,
+				E8B2545C244C622600C7E45F /* PinterestLayout.swift */,
 			);
 			path = ImageList;
 			sourceTree = "<group>";
@@ -266,6 +269,7 @@
 				E843980C244B094F00601928 /* Array+Extensions.swift in Sources */,
 				E8C403242447A4B800AE1EAE /* AppDelegate.swift in Sources */,
 				E8DD83112448F2490016FD6D /* Disposable.swift in Sources */,
+				E8B2545D244C622600C7E45F /* PinterestLayout.swift in Sources */,
 				E8C403262447A4B800AE1EAE /* SceneDelegate.swift in Sources */,
 				E8C403382447A8B100AE1EAE /* ImageListViewModel.swift in Sources */,
 				E8DD83152448F2850016FD6D /* Change.swift in Sources */,

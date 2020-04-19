@@ -11,6 +11,7 @@ import UIKit
 struct ImageCellViewModel {
     let state: FetchingState
     let url: URL
+    let size: CGSize
     var image: UIImage?
 }
 

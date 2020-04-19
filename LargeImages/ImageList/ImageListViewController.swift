@@ -20,19 +20,12 @@ class ImageListViewController: UIViewController {
         currentViewModel.fetchImages()
     }
 
-//    override func viewWillLayoutSubviews() {
-//        super.viewWillLayoutSubviews()
-//
-//        collectionLayout.itemSize.width = itemWidth
-//        collectionLayout.itemSize.height = itemWidth
-//    }
-
     // MARK: - Private
 
     private let numberOfColumns = 2
     private let itemSize = CGSize(width: 100.0, height: 100.0)
 
-    private lazy var collectionLayout = UICollectionViewFlowLayout()
+    private lazy var collectionLayout = PinterestLayout(numberOfColumns: 2)
     private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: collectionLayout)
 
     private lazy var activityIndicatorView = UIView()
@@ -60,7 +53,7 @@ extension ImageListViewController: UICollectionViewDataSource {
 
         cell.cancelToken = currentViewModel.makeImageCellViewModel(
             for: indexPath.item,
-            with: collectionLayout.itemSize
+            with: collectionLayout.columnWidth
         ) { cellViewModel in
             guard cell.indexPath == indexPath else {
                 if let oldCell = collectionView.cellForItem(at: indexPath) as? ImageCell {
@@ -76,11 +69,14 @@ extension ImageListViewController: UICollectionViewDataSource {
     }
 }
 
-// MARK: - UICollectionViewDelegateFlowLayout
+// MARK: - PinterestLayoutDelegate
 
-extension ImageListViewController: UICollectionViewDelegateFlowLayout {
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        CGSize(width: itemWidth, height: itemWidth)
+extension ImageListViewController: PinterestLayoutDelegate {
+    func collectionView(
+        _ collectionView: UICollectionView,
+        heightForPhotoAtIndexPath indexPath: IndexPath
+    ) -> CGFloat {
+        currentViewModel.sizeOfImage(for: indexPath.item, with: collectionLayout.columnWidth).height
     }
 }
 
@@ -113,16 +109,10 @@ extension ImageListViewController: ErrorPresenter {}
 // MARK: - Private
 
 private extension ImageListViewController {
-    var itemWidth: CGFloat {
-        (collectionView.bounds.width
-            - collectionLayout.minimumInteritemSpacing * CGFloat(numberOfColumns - 1)
-        ) / CGFloat(numberOfColumns)
-    }
-
     func setup() {
         view.backgroundColor = .systemBackground
 
-        collectionLayout.itemSize = itemSize
+        collectionLayout.delegate = self
 
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         collectionView.backgroundColor = .systemBackground
@@ -131,7 +121,6 @@ private extension ImageListViewController {
 
         collectionView.register(ImageCell.self, forCellWithReuseIdentifier: ImageCell.reuseIdentifier)
         collectionView.dataSource = self
-        collectionView.delegate = self
 
         activityIndicator.color = .white
         activityIndicator.style = .large

@@ -14,6 +14,8 @@ extension UICollectionView {
     }
 
     func applyChanges(_ diff: CollectionDifference<URL>, updateData: @escaping () -> Void, completion: @escaping () -> Void) {
+        assert(Thread.isMainThread)
+
         var deletedIndexPaths = [IndexPath]()
         var insertedIndexPaths = [IndexPath]()
 
@@ -26,11 +28,13 @@ extension UICollectionView {
             }
         }
 
-        updateData()
         performBatchUpdates(
             {
+                updateData()
                 deleteItems(at: deletedIndexPaths)
                 insertItems(at: insertedIndexPaths)
+
+                NSLog("XXX - performed updates")
             },
             completion: { finished in
                 completion()

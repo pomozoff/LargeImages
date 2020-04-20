@@ -17,7 +17,7 @@ class ImageListViewController: UIViewController {
         super.viewDidLoad()
 
         setup()
-        currentViewModel.fetchImages()
+        currentViewModel.startFetchingImages()
     }
 
     // MARK: - Private
@@ -30,6 +30,8 @@ class ImageListViewController: UIViewController {
 
     private lazy var activityIndicatorView = UIView()
     private lazy var activityIndicator = UIActivityIndicatorView()
+
+    private lazy var refreshControl = UIRefreshControl()
 }
 
 // MARK: - ViewModelOwning
@@ -106,6 +108,15 @@ extension ImageListViewController: ImagePresenter {
 
 extension ImageListViewController: ErrorPresenter {}
 
+// MARK: - Private Actions
+
+private extension ImageListViewController {
+    @objc
+    private func refreshImages(_ sender: UIRefreshControl) {
+        currentViewModel.refreshImages()
+    }
+}
+
 // MARK: - Private
 
 private extension ImageListViewController {
@@ -114,22 +125,25 @@ private extension ImageListViewController {
 
         collectionLayout.delegate = self
 
-        collectionView.translatesAutoresizingMaskIntoConstraints = false
+        collectionView.refreshControl = refreshControl
         collectionView.backgroundColor = .systemBackground
         collectionView.showsHorizontalScrollIndicator = false
         collectionView.alwaysBounceVertical = true
+        collectionView.translatesAutoresizingMaskIntoConstraints = false
 
         collectionView.register(ImageCell.self, forCellWithReuseIdentifier: ImageCell.reuseIdentifier)
         collectionView.dataSource = self
+
+        refreshControl.addTarget(self, action: #selector(refreshImages), for: .valueChanged)
 
         activityIndicator.color = .white
         activityIndicator.style = .large
         activityIndicator.translatesAutoresizingMaskIntoConstraints = false
 
         activityIndicatorView.alpha = 0.0
-        activityIndicatorView.translatesAutoresizingMaskIntoConstraints = false
         activityIndicatorView.isUserInteractionEnabled = false
         activityIndicatorView.backgroundColor = UIColor(white: 0.3, alpha: 0.5)
+        activityIndicatorView.translatesAutoresizingMaskIntoConstraints = false
 
         activityIndicatorView.addSubview(activityIndicator)
         view.addSubview(collectionView)
@@ -152,7 +166,12 @@ private extension ImageListViewController {
     }
 
     func showActivityIndicator(_ isShown: Bool) {
-        isShown ? activityIndicator.startAnimating() : activityIndicator.stopAnimating()
+        if isShown {
+            activityIndicator.startAnimating()
+        } else {
+            activityIndicator.stopAnimating()
+            refreshControl.endRefreshing()
+        }
 
         UIView.animate(withDuration: 0.25) {
             self.activityIndicatorView.alpha = isShown ? 1.0 : 0.0

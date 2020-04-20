@@ -34,7 +34,6 @@
 		E8DD83132448F26D0016FD6D /* DisposeBag.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8DD83122448F26D0016FD6D /* DisposeBag.swift */; };
 		E8DD83152448F2850016FD6D /* Change.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8DD83142448F2850016FD6D /* Change.swift */; };
 		E8DD8317244900EA0016FD6D /* UnsafeBag.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8DD8316244900EA0016FD6D /* UnsafeBag.swift */; };
-		E8DD8319244A1D020016FD6D /* Worker.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8DD8318244A1D020016FD6D /* Worker.swift */; };
 		E8DD831B244A32540016FD6D /* ImageURLChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8DD831A244A32540016FD6D /* ImageURLChecker.swift */; };
 /* End PBXBuildFile section */
 
@@ -68,7 +67,6 @@
 		E8DD83122448F26D0016FD6D /* DisposeBag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisposeBag.swift; sourceTree = "<group>"; };
 		E8DD83142448F2850016FD6D /* Change.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Change.swift; sourceTree = "<group>"; };
 		E8DD8316244900EA0016FD6D /* UnsafeBag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnsafeBag.swift; sourceTree = "<group>"; };
-		E8DD8318244A1D020016FD6D /* Worker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Worker.swift; sourceTree = "<group>"; };
 		E8DD831A244A32540016FD6D /* ImageURLChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageURLChecker.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -179,7 +177,6 @@
 				E8C3AB2E244A396C00E20C66 /* ErrorPresenter.swift */,
 				E8DD8316244900EA0016FD6D /* UnsafeBag.swift */,
 				E8C4033D24482BD500AE1EAE /* ViewModel.swift */,
-				E8DD8318244A1D020016FD6D /* Worker.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -263,7 +260,6 @@
 				E8C4034024483D6F00AE1EAE /* ImageCellViewModel.swift in Sources */,
 				E8DD8317244900EA0016FD6D /* UnsafeBag.swift in Sources */,
 				E8DD83132448F26D0016FD6D /* DisposeBag.swift in Sources */,
-				E8DD8319244A1D020016FD6D /* Worker.swift in Sources */,
 				E8DD831B244A32540016FD6D /* ImageURLChecker.swift in Sources */,
 				E8C3AB2F244A396C00E20C66 /* ErrorPresenter.swift in Sources */,
 				E843980C244B094F00601928 /* Array+Extensions.swift in Sources */,

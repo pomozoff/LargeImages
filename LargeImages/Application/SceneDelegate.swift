@@ -18,7 +18,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = (scene as? UIWindowScene) else { return }
 
         print(URL.documents)
-        let directoryReader = DirectoryReader(url: URL.documents)
+        let directoryReader = DirectoryReader(
+            url: URL.documents,
+            queue: DispatchQueue.global(qos: .background)
+        )
         directoryReader.imageFilter = ImageURLFilter()
 
         let imageResizer = ImageIOResizer()

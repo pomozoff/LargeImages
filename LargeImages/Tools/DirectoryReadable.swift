@@ -14,20 +14,33 @@ enum DirectoryReaderError: Error {
 
 typealias DirectoryReaderResult = Result<[URL], Error>
 
-protocol DirectoryReadable: Worker {
-    func didUpdateDirectory(_ action: @escaping (DirectoryReaderResult) -> Void) -> Disposable
+protocol DirectoryReadable: AnyObject {
+    var isStarted: Bool { get }
+
+    func start()
+    func refresh()
+
+    func didUpdate(_ action: @escaping (DirectoryReaderResult) -> Void) -> Disposable
 }
 
 class DirectoryReader {
+    @Atomic
+    private(set) var isStarted = false
+
     var imageFilter: ImageURLChecker?
 
-    init(url: URL) {
+    init(
+        url: URL,
+        queue: DispatchQueue
+    ) {
         self.url = url
+        self.queue = queue
         self.fileDescriptor = open(url.path, O_EVTONLY)
+
         self.source = DispatchSource.makeFileSystemObjectSource(
             fileDescriptor: self.fileDescriptor,
-            eventMask: .all,
-            queue: DispatchQueue.global(qos: .background)
+            eventMask: .write,
+            queue: queue
         )
         self.source.setEventHandler { [unowned self] in
             self.fetchContentOfDirectory()
@@ -35,27 +48,35 @@ class DirectoryReader {
     }
 
     deinit {
-      source.cancel()
-      close(fileDescriptor)
+        source.cancel()
+        close(fileDescriptor)
     }
 
     private let url: URL
-    private let updateDirectoryBag = UnsafeBag<(DirectoryReaderResult) -> Void>()
-
+    private let queue: DispatchQueue
     private let fileDescriptor: CInt
     private let source: DispatchSourceProtocol
+
+    private let updateDirectoryBag = UnsafeBag<(DirectoryReaderResult) -> Void>()
 }
 
 extension DirectoryReader: DirectoryReadable {
-    func didUpdateDirectory(_ action: @escaping (DirectoryReaderResult) -> Void) -> Disposable {
-        updateDirectoryBag.insert(action)
-    }
-}
-
-extension DirectoryReader: Worker {
     func start() {
-        fetchContentOfDirectory()
+        guard !isStarted else { return }
+
+        isStarted = true
+        refresh()
         source.resume()
+    }
+
+    func refresh() {
+        queue.async { [weak self] in
+            self?.fetchContentOfDirectory()
+        }
+    }
+
+    func didUpdate(_ action: @escaping (DirectoryReaderResult) -> Void) -> Disposable {
+        updateDirectoryBag.insert(action)
     }
 }
 

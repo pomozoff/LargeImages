@@ -36,6 +36,11 @@ class PinterestLayout: UICollectionViewLayout {
         fatalError("init(coder:) has not been implemented")
     }
 
+    override func invalidateLayout() {
+        cache.removeAll()
+        super.invalidateLayout()
+    }
+
     override var collectionViewContentSize: CGSize {
         return CGSize(width: contentWidth, height: contentHeight)
     }

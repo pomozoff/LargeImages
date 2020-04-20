@@ -50,9 +50,11 @@ extension ImageListViewModel {
         items.count
     }
 
-    func fetchImages() {
+    func startFetchingImages() {
+        guard !directoryReadable.isStarted else { return }
+
         directoryReadable
-            .didUpdateDirectory { [weak self] result in
+            .didUpdate { [weak self] result in
                 self?.processDirectoryResult(result)
             }
             .disposed(by: disposeBag)
@@ -61,6 +63,11 @@ extension ImageListViewModel {
         DispatchQueue.global(qos: .userInitiated).async { [weak directoryReadable] in
             directoryReadable?.start()
         }
+    }
+
+    func refreshImages() {
+        presenter?.updateState(.fetching)
+        directoryReadable.refresh()
     }
 
     func sizeOfImage(for index: Int, with width: CGFloat) -> CGSize {
@@ -90,12 +97,10 @@ extension ImageListViewModel {
             image: nil)
         )
 
-        NSLog("YYY - index: \(index), file: \(item.url.lastPathComponent)")
         return imageFetchable.fetchImage(
             from: item.url,
             with: size,
             completion: { [weak self] result in
-                NSLog("YYY - index: \(index), result \(result)")
                 self?.processFetchingImageResult(result, for: item.url, completion: completion)
             }
         )
@@ -108,7 +113,10 @@ private extension ImageListViewModel {
     func processDirectoryResult(_ result: DirectoryReaderResult) {
         switch result {
         case let .success(urls):
+            assert(!Thread.isMainThread)
+            NSLog("XXX - wait urls: \(urls)")
             updateSemaphore.wait()
+            NSLog("XXX - go urls: \(urls)")
 
             let diff = urls.difference(from: self.items.map(\.url))
             let sizes = urls.map { $0.sizeOfImage }
@@ -120,6 +128,7 @@ private extension ImageListViewModel {
                 self.presenter?.didUpdateURLs(
                     with: diff,
                     updateData: { [weak self] in
+                        NSLog("XXX - update data urls: \(urls)")
                         self?.$items.mutate { items in
                             items = urls.enumerated().map { (index, url) in
                                 Item(
@@ -129,7 +138,9 @@ private extension ImageListViewModel {
                                 )
                             }
                         }
+                        NSLog("XXX - updated data urls: \(urls)")
                     }, completion: { [weak self] in
+                        NSLog("XXX - signal urls: \(urls)")
                         self?.updateSemaphore.signal()
                     }
                 )

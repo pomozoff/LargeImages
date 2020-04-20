@@ -57,20 +57,13 @@ extension ImageFetcher: ImageFetchable {
 
             guard let self = self else { return }
 
-            NSLog("XXX - Execute worker for file: \(url.lastPathComponent)")
             let result = self.imageResizable.resizedImage(at: url, for: size)
             completion(result.map { UIImage(cgImage: $0) })
-            NSLog("XXX - Completed worker for file: \(url.lastPathComponent)")
         }
 
         let uuid = addWorker(worker)
-        NSLog("XXX - Added worker: \(uuid) for file: \(url.lastPathComponent)")
-
         return { [weak self, weak worker] in
-            NSLog("XXX - Cancel token - worker: \(uuid) for file: \(url.lastPathComponent)")
-
             if let worker = worker, !worker.isCancelled {
-                NSLog("XXX - Cancel worker: \(uuid) for file: \(url.lastPathComponent)")
                 worker.cancel()
             }
 

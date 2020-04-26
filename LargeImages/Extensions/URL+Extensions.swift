@@ -9,10 +9,36 @@
 import CoreGraphics
 import Foundation
 import ImageIO
+import MobileCoreServices
 
 extension URL {
     static var documents: URL {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+    }
+
+    var isDirectory: Bool {
+        (resourceValue(forKey: .isDirectoryKey) as Bool?) ?? false
+    }
+
+    var isRegularFile: Bool {
+        (resourceValue(forKey: .isRegularFileKey) as Bool?) ?? false
+    }
+
+    var isReadable: Bool {
+        (resourceValue(forKey: .isReadableKey) as Bool?) ?? false
+    }
+
+    var fileSize: Int {
+        (resourceValue(forKey: .fileSizeKey) as Int?) ?? 0
+    }
+
+    var isImage: Bool {
+        guard
+            let uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, pathExtension as CFString, nil),
+            UTTypeConformsTo((uti.takeUnretainedValue()), kUTTypeImage)
+        else { return false }
+
+        return true
     }
 
     var sizeOfImage: CGSize {
@@ -27,7 +53,11 @@ extension URL {
         return CGSize(width: width, height: height)
     }
 
-    func isDirectory() throws -> Bool {
-        (try resourceValues(forKeys: [.isDirectoryKey])).isDirectory ?? false
+    func resourceValues(forKeys keys: Set<URLResourceKey>) -> [URLResourceKey: Any] {
+        (try? resourceValues(forKeys: keys))?.allValues ?? [:]
+    }
+
+    func resourceValue<T>(forKey key: URLResourceKey) -> T? {
+        resourceValues(forKeys: [key])[key] as? T
     }
 }

@@ -17,7 +17,8 @@ extension UIKitImageResizer: ImageResizable {
         }
 
         let renderer = UIGraphicsImageRenderer(size: size)
-        guard let cgImage = renderer.image(actions: { context in
+        guard let cgImage = renderer.image(
+            actions: { context in
                 image.draw(in: CGRect(origin: .zero, size: size))
             }).cgImage
         else {

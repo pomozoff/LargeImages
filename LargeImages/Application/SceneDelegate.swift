@@ -22,7 +22,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             url: URL.documents,
             queue: DispatchQueue.global(qos: .background)
         )
-        directoryReader.imageFilter = ImageURLFilter()
 
         let imageResizer = ImageIOResizer()
         let imageFetchable = ImageFetcher(imageResizable: imageResizer, maxTasksNumber: 4)

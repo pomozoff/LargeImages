@@ -19,7 +19,7 @@ typealias CancelToken = () -> Void
 
 protocol ImagePresenter: AnyObject {
     func updateState(_ state: FetchingState)
-    func didUpdateURLs(with diff: CollectionDifference<URL>, updateData: @escaping () -> Void, completion: @escaping () -> Void)
+    func didUpdateItems(with diff: CollectionDifference<URL>, updateData: @escaping () -> Void, completion: @escaping () -> Void)
 }
 
 class ImageListViewModel {
@@ -71,7 +71,7 @@ extension ImageListViewModel {
     }
 
     func sizeOfImage(for index: Int, with width: CGFloat) -> CGSize {
-        items[index].size.aspectSize(for: width)
+        items[index].image?.size.aspectSize(for: width) ?? CGSize(width: width, height: width)
     }
 
     func makeImageCellViewModel(for index: Int, with width: CGFloat, completion: @escaping (ImageCellViewModel) -> Void) -> CancelToken? {
@@ -89,7 +89,7 @@ extension ImageListViewModel {
             return nil
         }
 
-        let size = item.size.aspectSize(for: width)
+        let size = CGSize(width: width, height: width)
         completion(ImageCellViewModel(
             state: .fetching,
             url: item.url,
@@ -100,8 +100,10 @@ extension ImageListViewModel {
         return imageFetchable.fetchImage(
             from: item.url,
             with: size,
-            completion: { [weak self] result in
-                self?.processFetchingImageResult(result, for: item.url, completion: completion)
+            completion: { [weak self] image in
+                DispatchQueue.main.async { [weak self] in
+                    self?.updateImage(image, for: item.url, completion: completion)
+                }
             }
         )
     }
@@ -114,33 +116,26 @@ private extension ImageListViewModel {
         switch result {
         case let .success(urls):
             assert(!Thread.isMainThread)
-            NSLog("XXX - wait urls: \(urls)")
-            updateSemaphore.wait()
-            NSLog("XXX - go urls: \(urls)")
 
+            updateSemaphore.wait()
             let diff = urls.difference(from: self.items.map(\.url))
-            let sizes = urls.map { $0.sizeOfImage }
 
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
 
                 self.presenter?.updateState(.idle)
-                self.presenter?.didUpdateURLs(
+                self.presenter?.didUpdateItems(
                     with: diff,
                     updateData: { [weak self] in
-                        NSLog("XXX - update data urls: \(urls)")
                         self?.$items.mutate { items in
                             items = urls.enumerated().map { (index, url) in
                                 Item(
                                     url: url,
-                                    size: sizes[index],
                                     image: items.first { $0.url == url }?.image
                                 )
                             }
                         }
-                        NSLog("XXX - updated data urls: \(urls)")
                     }, completion: { [weak self] in
-                        NSLog("XXX - signal urls: \(urls)")
                         self?.updateSemaphore.signal()
                     }
                 )
@@ -153,41 +148,25 @@ private extension ImageListViewModel {
         }
     }
 
-    func processFetchingImageResult(_ result: ImageFetcherResult, for url: URL, completion: @escaping (ImageCellViewModel) -> Void) {
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-
-            switch result {
-            case let .success(image):
-                self.$items.mutate {
-                    guard let index = $0.firstIndex(where: { $0.url == url }) else {
-                        return
-                    }
-                    $0[index].image = image
-                }
-                completion(ImageCellViewModel(
-                    state: .idle,
-                    url: url,
-                    size: image.size,
-                    image: image)
-                )
-
-            case let .failure(error):
-                completion(ImageCellViewModel(
-                    state: .error(error),
-                    url: url,
-                    size: .zero,
-                    image: nil)
-                )
-                self.presenter?.updateState(.error(error))
+    func updateImage(_ image: UIImage, for url: URL, completion: @escaping (ImageCellViewModel) -> Void) {
+        $items.mutate {
+            guard let index = $0.firstIndex(where: { $0.url == url }) else {
+                return
             }
+            $0[index].image = image
         }
+
+        completion(ImageCellViewModel(
+            state: .idle,
+            url: url,
+            size: image.size,
+            image: image)
+        )
     }
 }
 
 private struct Item {
     let url: URL
-    let size: CGSize
     var image: UIImage?
 }
 

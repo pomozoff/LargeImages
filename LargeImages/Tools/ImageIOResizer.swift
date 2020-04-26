@@ -21,9 +21,11 @@ extension ImageIOResizer: ImageResizable {
             kCGImageSourceThumbnailMaxPixelSize: max(size.width, size.height)
         ]
 
-        guard let imageSource = CGImageSourceCreateWithURL(url as NSURL, nil),
-            let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary)
-        else {
+        guard let imageSource = CGImageSourceCreateWithURL(NSURL(fileURLWithPath: url.path), nil) else {
+            return .failure(ImageResizerError.noFile(url))
+        }
+
+        guard let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary) else {
             return .failure(ImageResizerError.invalidFile(url))
         }
 

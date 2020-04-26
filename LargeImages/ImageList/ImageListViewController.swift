@@ -25,7 +25,7 @@ class ImageListViewController: UIViewController {
     private let numberOfColumns = 2
     private let itemSize = CGSize(width: 100.0, height: 100.0)
 
-    private lazy var collectionLayout = PinterestLayout(numberOfColumns: 2)
+    private lazy var collectionLayout = PinterestLayout(numberOfColumns: numberOfColumns)
     private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: collectionLayout)
 
     private lazy var activityIndicatorView = UIView()
@@ -56,28 +56,34 @@ extension ImageListViewController: UICollectionViewDataSource {
         cell.cancelToken = currentViewModel.makeImageCellViewModel(
             for: indexPath.item,
             with: collectionLayout.columnWidth
-        ) { cellViewModel in
+        ) { [weak self] cellViewModel in
             guard cell.indexPath == indexPath else {
-                if let oldCell = collectionView.cellForItem(at: indexPath) as? ImageCell {
-                    return oldCell.configure(with: cellViewModel)
+                guard let oldCell = collectionView.cellForItem(at: indexPath) as? ImageCell else {
+                    return
                 }
-                return
+                return oldCell.configure(with: cellViewModel)
             }
-
             cell.configure(with: cellViewModel)
-        }
 
+            if case .idle = cellViewModel.state {
+                UIView.animate(
+                    withDuration: 0.25,
+                    delay: 0.0,
+                    options: .curveEaseInOut,
+                    animations: {
+                        self?.collectionLayout.invalidateLayout()
+                    },
+                    completion: nil)
+            }
+        }
         return cell
     }
 }
 
-// MARK: - PinterestLayoutDelegate
+// MARK: - UICollectionViewDelegateFlowLayout
 
 extension ImageListViewController: PinterestLayoutDelegate {
-    func collectionView(
-        _ collectionView: UICollectionView,
-        heightForPhotoAtIndexPath indexPath: IndexPath
-    ) -> CGFloat {
+    func collectionView(_ collectionView: UICollectionView, heightForPhotoAtIndexPath indexPath: IndexPath) -> CGFloat {
         currentViewModel.sizeOfImage(for: indexPath.item, with: collectionLayout.columnWidth).height
     }
 }
@@ -99,7 +105,7 @@ extension ImageListViewController: ImagePresenter {
         }
     }
 
-    func didUpdateURLs(with diff: CollectionDifference<URL>, updateData: @escaping () -> Void, completion: @escaping () -> Void) {
+    func didUpdateItems(with diff: CollectionDifference<URL>, updateData: @escaping () -> Void, completion: @escaping () -> Void) {
         collectionView.applyChanges(diff, updateData: updateData, completion: completion)
     }
 }
@@ -120,6 +126,12 @@ private extension ImageListViewController {
 // MARK: - Private
 
 private extension ImageListViewController {
+//    var itemWidth: CGFloat {
+//        (collectionView.bounds.width
+//            - collectionLayout.minimumInteritemSpacing * CGFloat(numberOfColumns - 1)
+//        ) / CGFloat(numberOfColumns)
+//    }
+
     func setup() {
         view.backgroundColor = .systemBackground
 

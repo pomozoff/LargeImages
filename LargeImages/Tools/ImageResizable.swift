@@ -12,7 +12,10 @@ import Foundation
 typealias ImageResizerResult = Result<CGImage, Error>
 
 enum ImageResizerError: Error {
+    case noFile(URL)
     case invalidFile(URL)
+    case contextFail(URL)
+    case scaleFail(URL)
     case unknown
 }
 

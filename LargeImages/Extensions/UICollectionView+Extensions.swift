@@ -33,8 +33,6 @@ extension UICollectionView {
                 updateData()
                 deleteItems(at: deletedIndexPaths)
                 insertItems(at: insertedIndexPaths)
-
-                NSLog("XXX - performed updates")
             },
             completion: { finished in
                 completion()

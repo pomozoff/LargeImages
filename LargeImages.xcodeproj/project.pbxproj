@@ -34,7 +34,7 @@
 		E8DD83132448F26D0016FD6D /* DisposeBag.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8DD83122448F26D0016FD6D /* DisposeBag.swift */; };
 		E8DD83152448F2850016FD6D /* Change.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8DD83142448F2850016FD6D /* Change.swift */; };
 		E8DD8317244900EA0016FD6D /* UnsafeBag.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8DD8316244900EA0016FD6D /* UnsafeBag.swift */; };
-		E8DD831B244A32540016FD6D /* ImageURLChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8DD831A244A32540016FD6D /* ImageURLChecker.swift */; };
+		E8EA14232454D7DD0076706F /* ContextImageResizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8EA14222454D7DC0076706F /* ContextImageResizer.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -67,7 +67,7 @@
 		E8DD83122448F26D0016FD6D /* DisposeBag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisposeBag.swift; sourceTree = "<group>"; };
 		E8DD83142448F2850016FD6D /* Change.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Change.swift; sourceTree = "<group>"; };
 		E8DD8316244900EA0016FD6D /* UnsafeBag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnsafeBag.swift; sourceTree = "<group>"; };
-		E8DD831A244A32540016FD6D /* ImageURLChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageURLChecker.swift; sourceTree = "<group>"; };
+		E8EA14222454D7DC0076706F /* ContextImageResizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextImageResizer.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -84,11 +84,11 @@
 		E845D3DF244B34E7008E88F4 /* Tools */ = {
 			isa = PBXGroup;
 			children = (
+				E8EA14222454D7DC0076706F /* ContextImageResizer.swift */,
 				E8DD83072448D8C60016FD6D /* DirectoryReadable.swift */,
 				E8A2D77B244B195F004BDA3D /* ImageFetchable.swift */,
 				E845D3E4244B37A4008E88F4 /* ImageIOResizer.swift */,
 				E845D3DD244B349F008E88F4 /* ImageResizable.swift */,
-				E8DD831A244A32540016FD6D /* ImageURLChecker.swift */,
 				E845D3E0244B357D008E88F4 /* UIKitImageResizer.swift */,
 			);
 			path = Tools;
@@ -260,7 +260,6 @@
 				E8C4034024483D6F00AE1EAE /* ImageCellViewModel.swift in Sources */,
 				E8DD8317244900EA0016FD6D /* UnsafeBag.swift in Sources */,
 				E8DD83132448F26D0016FD6D /* DisposeBag.swift in Sources */,
-				E8DD831B244A32540016FD6D /* ImageURLChecker.swift in Sources */,
 				E8C3AB2F244A396C00E20C66 /* ErrorPresenter.swift in Sources */,
 				E843980C244B094F00601928 /* Array+Extensions.swift in Sources */,
 				E8C403242447A4B800AE1EAE /* AppDelegate.swift in Sources */,
@@ -268,6 +267,7 @@
 				E8B2545D244C622600C7E45F /* PinterestLayout.swift in Sources */,
 				E8C403262447A4B800AE1EAE /* SceneDelegate.swift in Sources */,
 				E8C403382447A8B100AE1EAE /* ImageListViewModel.swift in Sources */,
+				E8EA14232454D7DD0076706F /* ContextImageResizer.swift in Sources */,
 				E8DD83152448F2850016FD6D /* Change.swift in Sources */,
 				E8C4033A24482A2500AE1EAE /* ImageCell.swift in Sources */,
 				E845D3E3244B3692008E88F4 /* CGSize+Extensions.swift in Sources */,

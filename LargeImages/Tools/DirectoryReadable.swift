@@ -27,37 +27,41 @@ class DirectoryReader {
     @Atomic
     private(set) var isStarted = false
 
-    var imageFilter: ImageURLChecker?
-
     init(
         url: URL,
         queue: DispatchQueue
     ) {
         self.url = url
-        self.queue = queue
-        self.fileDescriptor = open(url.path, O_EVTONLY)
+        self.backgroundQueue = queue
+        self.documentsDirectoryDescriptor = open(url.path, O_EVTONLY)
 
-        self.source = DispatchSource.makeFileSystemObjectSource(
-            fileDescriptor: self.fileDescriptor,
-            eventMask: .write,
+        directorySource = DispatchSource.makeFileSystemObjectSource(
+            fileDescriptor: self.documentsDirectoryDescriptor,
+            eventMask: .all,
             queue: queue
         )
-        self.source.setEventHandler { [unowned self] in
+
+        directorySource.setEventHandler { [unowned self] in
             self.fetchContentOfDirectory()
         }
     }
 
     deinit {
-        source.cancel()
-        close(fileDescriptor)
+        directorySource.cancel()
+        close(documentsDirectoryDescriptor)
     }
 
     private let url: URL
-    private let queue: DispatchQueue
-    private let fileDescriptor: CInt
-    private let source: DispatchSourceProtocol
+    private let backgroundQueue: DispatchQueue
+    private let documentsDirectoryDescriptor: CInt
+    private let directorySource: DispatchSourceProtocol
 
     private let updateDirectoryBag = UnsafeBag<(DirectoryReaderResult) -> Void>()
+
+    private let syncQueue = DispatchQueue(
+        label: "ru.akademon.largeimages.files-sync-queue",
+        qos: .userInitiated
+    )
 }
 
 extension DirectoryReader: DirectoryReadable {
@@ -66,11 +70,11 @@ extension DirectoryReader: DirectoryReadable {
 
         isStarted = true
         refresh()
-        source.resume()
+        directorySource.activate()
     }
 
     func refresh() {
-        queue.async { [weak self] in
+        backgroundQueue.async { [weak self] in
             self?.fetchContentOfDirectory()
         }
     }
@@ -81,33 +85,30 @@ extension DirectoryReader: DirectoryReadable {
 }
 
 private extension DirectoryReader {
-    func processResult(result: DirectoryReaderResult) {
+    func updateReadyFiles(result: DirectoryReaderResult) {
         updateDirectoryBag.forEach { $0(result) }
     }
 
     func fetchContentOfDirectory() {
-        do {
-            guard try url.isDirectory() else {
-                processResult(result: .failure(DirectoryReaderError.notDirectory))
-                return
-            }
-        } catch {
-            processResult(result: .failure(error))
+        guard url.isDirectory else {
+            updateReadyFiles(result: .failure(DirectoryReaderError.notDirectory))
+            return
         }
 
+        let resourceKeys: [URLResourceKey] = [.isRegularFileKey, .isReadableKey]
         do {
             let files: [URL] = try FileManager.default.contentsOfDirectory(
                 at: url,
-                includingPropertiesForKeys: [.isRegularFileKey],
+                includingPropertiesForKeys: resourceKeys,
                 options: .skipsHiddenFiles
-            ).compactMap { [weak imageFilter] in
-                return imageFilter?.check(url: $0)
+            ).filter {
+                $0.isRegularFile && $0.isReadable && $0.isImage
             }
 
-            processResult(result: .success(files))
+            updateReadyFiles(result: .success(files))
 
         } catch {
-            processResult(result: .failure(error))
+            updateReadyFiles(result: .failure(error))
         }
     }
 }

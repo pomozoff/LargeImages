@@ -64,7 +64,7 @@ private extension ImageCell {
         imageView.contentMode = .center
         imageView.translatesAutoresizingMaskIntoConstraints = false
 
-        contentView.backgroundColor = .systemBackground
+        contentView.backgroundColor = .gray
         contentView.layer.cornerRadius = 4.0
         contentView.layer.masksToBounds = true
 
@@ -111,9 +111,11 @@ private extension ImageCell {
         switch state {
         case .idle:
             showActivityIndicator(false)
+            contentView.backgroundColor = .clear
 
         case .fetching:
             showActivityIndicator(true)
+            contentView.backgroundColor = .gray
 
         case .error:
             showActivityIndicator(false)

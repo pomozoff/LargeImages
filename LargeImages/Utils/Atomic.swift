@@ -40,14 +40,37 @@ class Atomic<Value> {
         mutation(&value)
     }
 
-    private let lock = ReadWriteLock()
+    private let lock = MutexLock()
     private var value: Value
+}
+
+private final class MutexLock {
+    @inlinable
+    func lock() {
+        pthread_mutex_lock(&mutex)
+    }
+
+    @inlinable
+    func unlock() {
+        pthread_mutex_unlock(&mutex)
+    }
+
+    private var mutex: pthread_mutex_t = {
+        var mutex = pthread_mutex_t()
+        pthread_mutex_init(&mutex, nil)
+        return mutex
+    }()
 }
 
 private final class ReadWriteLock {
     @inlinable
-    func lock() {
+    func writeLock() {
         pthread_rwlock_wrlock(&rwlock)
+    }
+
+    @inlinable
+    func readLock() {
+        pthread_rwlock_rdlock(&rwlock)
     }
 
     @inlinable

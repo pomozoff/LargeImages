@@ -49,48 +49,42 @@ extension ImageFetcher: ImageFetchable {
         with size: CGSize,
         completion: @escaping (UIImage) -> Void
     ) -> CancelToken? {
-        NSLog("XXX - Fetch image from file: \(url.lastPathComponent)")
-
         let uuid = UUID()
         let worker = DispatchWorkItem { [weak self] in
             defer {
                 NSLog("ZZZ - signal - worker's job done: \(uuid)")
-                self?.workersSemaphore.signal()
+//                self?.workersSemaphore.signal()
             }
 
             guard let self = self else { return }
-            NSLog("ZZZ - start worker: \(uuid), size: \(size)")
+            NSLog("ZZZ - start worker: \(uuid), file: \(url.lastPathComponent)")
 
             let result = self.imageResizable.resizedImage(at: url, for: size)
             switch result {
             case let .success(image):
-                NSLog("ZZZ - worker succeeded: \(uuid)")
+                NSLog("ZZZ - worker succeeded: \(uuid), file: \(url.lastPathComponent)")
                 self.removeWorker(for: uuid)
                 completion(UIImage(cgImage: image))
 
             case let .failure(error):
-                NSLog("ZZZ - worker failed: \(uuid), error: \(error)")
+                NSLog("ZZZ - worker failed: \(uuid), file: \(url.lastPathComponent), error: \(error)")
                 if case ImageResizerError.noFile = error {
                     NSLog("ZZZ - file removed: \(url.lastPathComponent)")
                     return self.removeWorker(for: uuid)
                 }
 
                 self.$workers.mutate {
-                    $0.first { $0.key == uuid }?.value.isExecuting = false
+                    NSLog("ZZZ - pause worker: \(uuid), file: \(url.lastPathComponent)")
+                    $0[uuid]?.isExecuting = false
                 }
             }
         }
 
-        DispatchQueue.global().async { [weak self] in
-            NSLog("ZZZ - add worker: \(uuid), for file \(url.lastPathComponent)")
-            self?.addWorker(worker, for: uuid)
-        }
+        NSLog("ZZZ - add worker: \(uuid), file \(url.lastPathComponent)")
+        addWorker(worker, for: uuid)
 
-        return { [weak self, weak worker] in
-            NSLog("ZZZ - cancel worker: \(uuid), for file: \(url.lastPathComponent)")
-            if let worker = worker, !worker.isCancelled {
-                worker.cancel()
-            }
+        return { [weak self] in
+            NSLog("ZZZ - cancel worker: \(uuid), file: \(url.lastPathComponent)")
             self?.removeWorker(for: uuid)
         }
     }
@@ -102,32 +96,43 @@ private extension ImageFetcher {
             $0[uuid] = worker
         }
 
-        hasWorkers = true
-        executeWorkers()
+        DispatchQueue.global().async { [weak self] in
+            guard let self = self else { return }
+
+            guard !self.hasWorkers else { return }
+
+            self.hasWorkers = true
+            self.executeWorkers()
+        }
     }
 
     func removeWorker(for uuid: UUID) {
         NSLog("ZZZ - remove worker: \(uuid)")
         $workers.mutate {
+            if let worker = $0[uuid] {
+                worker.cancel()
+                worker.isExecuting = false
+            }
             $0.removeValue(forKey: uuid)
         }
+//        workersSemaphore.signal()
     }
 
     func executeWorkers() {
         NSLog("ZZZ - execute workers")
 
         while hasWorkers {
-            NSLog("ZZZ - wait")
-            workersSemaphore.wait()
+//            NSLog("ZZZ - wait")
+//            workersSemaphore.wait()
 
             var firstWorkerPair: (key: UUID, value: DispatchWorkItem)?
             $workers.mutate { [weak self] in
                 guard let self = self else { return }
 
                 guard !$0.isEmpty else {
-                    NSLog("ZZZ - signal - no available workers")
+                    NSLog("ZZZ - signal - no workers")
                     self.hasWorkers = false
-                    self.workersSemaphore.signal()
+//                    self.workersSemaphore.signal()
 
                     return
                 }

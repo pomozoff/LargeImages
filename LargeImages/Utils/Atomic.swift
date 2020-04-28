@@ -40,11 +40,30 @@ class Atomic<Value> {
         mutation(&value)
     }
 
-    private let lock = MutexLock()
+    private let lock = SpinLock()
     private var value: Value
 }
 
-private final class MutexLock {
+protocol Lockable: AnyObject {
+    func lock()
+    func unlock()
+}
+
+private final class SpinLock: Lockable {
+    @inlinable
+    func lock() {
+        os_unfair_lock_lock(&unfairLock)
+    }
+
+    @inlinable
+    func unlock() {
+        os_unfair_lock_unlock(&unfairLock)
+    }
+
+    private var unfairLock = os_unfair_lock_s()
+}
+
+private final class MutexLock: Lockable {
     @inlinable
     func lock() {
         pthread_mutex_lock(&mutex)

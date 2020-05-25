@@ -21,13 +21,13 @@ class Atomic<Value> {
     var wrappedValue: Value {
         get {
             defer { lock.unlock() }
-            lock.lock()
+            lock.readLock()
 
             return value
         }
         set {
             defer { lock.unlock() }
-            lock.lock()
+            lock.writeLock()
 
             value = newValue
         }
@@ -35,12 +35,12 @@ class Atomic<Value> {
 
     func mutate(_ mutation: (inout Value) -> Void) {
         defer { lock.unlock() }
-        lock.lock()
+        lock.writeLock()
 
         mutation(&value)
     }
 
-    private let lock = SpinLock()
+    private let lock = ReadWriteLock()
     private var value: Value
 }
 
